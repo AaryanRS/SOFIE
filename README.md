@@ -16,6 +16,20 @@ Sensitive text is often copied into tools that process it on remote servers. SOF
 
 Detectors use practical patterns for the supported formats; they are not a guarantee that every sensitive value or identifier in a document will be found.
 
+## Screenshots
+
+### Main interface
+
+<img src="https://github.com/user-attachments/assets/bd6589b9-7a33-4516-8f3c-d23f1d13fccd" alt="SOFIE main interface" width="100%" />
+
+### Detection and sanitization
+
+<img src="https://github.com/user-attachments/assets/a39d18b0-4916-455b-87bb-bee011e4fe7b" alt="SOFIE detection and sanitization view" width="100%" />
+
+### Local AI and prompt log
+
+<img src="https://github.com/user-attachments/assets/0c96399d-86c2-4b05-b793-68f74b9524ca" alt="SOFIE local AI privacy insight and prompt log" width="100%" />
+
 ## Privacy architecture
 
 PII detection and redaction run in the browser. SOFIE does not send raw document content or matched PII to a backend, use a remote DLP service, or call a remote Gemini API. Sensitive document content is not written to local storage, session storage, or IndexedDB. Export creates a browser download from the sanitized result.
