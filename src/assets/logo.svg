@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SOFIE Penguin Logo — Kinetic Orange style -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-label="SOFIE penguin logo" role="img">
+  <!-- Body -->
+  <ellipse cx="32" cy="38" rx="18" ry="20" fill="#000000"/>
+  <!-- White belly -->
+  <ellipse cx="32" cy="40" rx="11" ry="14" fill="#FFFFFF"/>
+  <!-- Head -->
+  <circle cx="32" cy="18" r="13" fill="#000000"/>
+  <!-- Face white -->
+  <ellipse cx="32" cy="20" rx="8" ry="9" fill="#FFFFFF"/>
+  <!-- Left eye -->
+  <circle cx="27.5" cy="17" r="2.5" fill="#000000"/>
+  <circle cx="28.2" cy="16.3" r="0.8" fill="#FFFFFF"/>
+  <!-- Right eye -->
+  <circle cx="36.5" cy="17" r="2.5" fill="#000000"/>
+  <circle cx="37.2" cy="16.3" r="0.8" fill="#FFFFFF"/>
+  <!-- Beak -->
+  <ellipse cx="32" cy="23.5" rx="3.5" ry="2" fill="#FF4D00"/>
+  <!-- Left wing -->
+  <ellipse cx="12" cy="38" rx="6" ry="12" fill="#000000" transform="rotate(-15 12 38)"/>
+  <!-- Right wing -->
+  <ellipse cx="52" cy="38" rx="6" ry="12" fill="#000000" transform="rotate(15 52 38)"/>
+  <!-- Feet -->
+  <ellipse cx="26" cy="57" rx="5" ry="2.5" fill="#FF4D00"/>
+  <ellipse cx="38" cy="57" rx="5" ry="2.5" fill="#FF4D00"/>
+  <!-- Orange accent scarf/tag -->
+  <rect x="22" y="27" width="20" height="3" rx="1.5" fill="#FF4D00"/>
+</svg>
