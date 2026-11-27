@@ -43,12 +43,14 @@ describe('Phase 3: Core Redaction Engine', () => {
       expect(maskPhone('+91 9876543210')).toBe('+91 ******3210');
       expect(maskPhone('09876543210')).toBe('0******3210');
       expect(maskPhone('9876543210')).toBe('******3210');
+      expect(maskPhone('1234')).toBe('****');
     });
 
     it('masks credit card preserving grouping and last 4 digits', () => {
       expect(maskCreditCard('4111-1111-1111-1234')).toBe('XXXX-XXXX-XXXX-1234');
       expect(maskCreditCard('4111 1111 1111 1234')).toBe('XXXX XXXX XXXX 1234');
       expect(maskCreditCard('4111111111111234')).toBe('XXXXXXXXXXXX1234');
+      expect(maskCreditCard('1234')).toBe('XXXX');
     });
 
     it('masks Indian PAN preserving first 5 and last letter', () => {
@@ -60,6 +62,7 @@ describe('Phase 3: Core Redaction Engine', () => {
       expect(maskAadhaar('1234-5678-9012')).toBe('XXXX-XXXX-9012');
       expect(maskAadhaar('1234 5678 9012')).toBe('XXXX XXXX 9012');
       expect(maskAadhaar('123456789012')).toBe('XXXXXXXX9012');
+      expect(maskAadhaar('1234')).toBe('XXXX');
     });
 
     it('masks IPv4 keeping first two octets', () => {
@@ -125,6 +128,15 @@ describe('Phase 3: Core Redaction Engine', () => {
       // Next distinct values increment to 02
       expect(p.getPseudonym(EntityType.EMAIL, 'c@d.com')).toBe('EMAIL_02');
       expect(p.getPseudonym(EntityType.PHONE, '9876543211')).toBe('PHONE_02');
+    });
+
+    it('restores counters from valid seeded mappings and ignores unknown entity prefixes', () => {
+      const p = new Pseudonymizer(new Map([
+        ['email:known@example.com', 'EMAIL_04'],
+        ['unknown:value', 'EMAIL_99'],
+      ]));
+
+      expect(p.getPseudonym(EntityType.EMAIL, 'new@example.com')).toBe('EMAIL_05');
     });
 
     it('clearing/resetting starts a fresh mapping', () => {

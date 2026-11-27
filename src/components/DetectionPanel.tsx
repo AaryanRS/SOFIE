@@ -5,7 +5,7 @@
  * Handles all empty states.
  */
 import { PiiEntity } from '../core/pii/types';
-import { EntityType } from '../core/pii/index';
+import { EntityType, countEntitiesByType } from '../core/pii/index';
 import { ENTITY_META, ENTITY_ORDER } from '../data/entityMeta';
 
 interface Props {
@@ -17,14 +17,7 @@ interface Props {
 export function DetectionPanel({ entities, isDetecting, hasInput }: Props) {
   const total = entities.length;
 
-  // Count per type
-  const counts = ENTITY_ORDER.reduce<Record<EntityType, number>>(
-    (acc, t) => {
-      acc[t] = entities.filter((e) => e.type === t).length;
-      return acc;
-    },
-    {} as Record<EntityType, number>
-  );
+  const counts = countEntitiesByType(entities);
 
   return (
     <section className="panel" aria-labelledby="detection-panel-title">

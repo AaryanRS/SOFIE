@@ -21,6 +21,8 @@ import {
 } from './detectors.js';
 import { PiiEntity } from './types.js';
 
+export { countEntitiesByType, createEmptyEntityCounts } from './entityCounts.js';
+
 // Re-export types and individual detectors so consumers can import from here
 export { EntityType } from './types.js';
 export type { PiiEntity } from './types.js';

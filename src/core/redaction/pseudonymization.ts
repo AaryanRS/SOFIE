@@ -18,9 +18,24 @@ export const PSEUDONYM_PREFIXES: Record<EntityType, string> = {
   [EntityType.CREDIT_CARD]: 'CARD',
 };
 
+const ENTITY_TYPE_VALUES: readonly string[] = Object.values(EntityType);
+
+const INITIAL_COUNTERS: Record<EntityType, number> = {
+  [EntityType.EMAIL]: 0,
+  [EntityType.PHONE]: 0,
+  [EntityType.IP]: 0,
+  [EntityType.PAN]: 0,
+  [EntityType.AADHAAR]: 0,
+  [EntityType.CREDIT_CARD]: 0,
+};
+
+function isEntityType(value: string): value is EntityType {
+  return ENTITY_TYPE_VALUES.includes(value);
+}
+
 /**
  * Normalizes an entity value for consistent lookup in the pseudonym map.
- * E.g., emails case-insensitive, PANs uppercase, phones/cards/aadhaar strip extraneous space differences.
+ * E.g., emails are case-insensitive and PANs are uppercase; other values are trimmed.
  */
 export function normalizeForPseudonym(type: EntityType, value: string): string {
   switch (type) {
@@ -31,7 +46,7 @@ export function normalizeForPseudonym(type: EntityType, value: string): string {
     case EntityType.PHONE:
     case EntityType.AADHAAR:
     case EntityType.CREDIT_CARD:
-      // Normalize separators so +91 9876543210 and +91 9876543210 match consistently
+      // Collapse repeated whitespace without changing punctuation or digit groups.
       return value.trim().replace(/\s+/g, ' ');
     case EntityType.IP:
     default:
@@ -49,22 +64,15 @@ export class Pseudonymizer {
 
   constructor(initialMap?: Map<string, string>) {
     this.map = initialMap ? new Map(initialMap) : new Map();
-    this.counters = {
-      [EntityType.EMAIL]: 0,
-      [EntityType.PHONE]: 0,
-      [EntityType.IP]: 0,
-      [EntityType.PAN]: 0,
-      [EntityType.AADHAAR]: 0,
-      [EntityType.CREDIT_CARD]: 0,
-    };
+    this.counters = { ...INITIAL_COUNTERS };
 
     // Reconstruct counters if an initial map was provided
     if (initialMap) {
       for (const [key, placeholder] of initialMap.entries()) {
-        const typePrefix = key.split(':')[0] as EntityType;
+        const typePrefix = key.split(':', 1)[0];
         const match = placeholder.match(/_(\d+)$/);
-        if (match && typePrefix in this.counters) {
-          const num = parseInt(match[1], 10);
+        if (match && isEntityType(typePrefix)) {
+          const num = Number(match[1]);
           if (num > this.counters[typePrefix]) {
             this.counters[typePrefix] = num;
           }
@@ -82,9 +90,8 @@ export class Pseudonymizer {
     const norm = normalizeForPseudonym(type, rawValue);
     const key = `${type}:${norm}`;
 
-    if (this.map.has(key)) {
-      return this.map.get(key)!;
-    }
+    const existing = this.map.get(key);
+    if (existing !== undefined) return existing;
 
     this.counters[type] += 1;
     const prefix = PSEUDONYM_PREFIXES[type];
@@ -100,9 +107,7 @@ export class Pseudonymizer {
    */
   public reset(): void {
     this.map.clear();
-    for (const key of Object.keys(this.counters)) {
-      this.counters[key as EntityType] = 0;
-    }
+    this.counters = { ...INITIAL_COUNTERS };
   }
 
   /**

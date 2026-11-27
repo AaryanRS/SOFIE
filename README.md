@@ -75,6 +75,8 @@ SOFIE is a static Vite application. In Vercel, import the repository and use the
 
 Sanitization is deterministic and client-side, but only recognized supported patterns are replaced. Review the sanitized output before sharing it; unrecognized identifiers and contextual clues may remain. Pasted text has no explicit size limit, while file uploads are limited to 10 MB. Local AI is optional and advisory, not a security boundary.
 
+See [SECURITY.md](SECURITY.md) for the data-handling boundary, limitations, and vulnerability-reporting guidance.
+
 ## Project structure
 
 - `src/core/pii/` — PII types, deterministic detectors, and validators.

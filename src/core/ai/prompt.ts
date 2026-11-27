@@ -6,8 +6,12 @@
  * Raw PII is never included.
  */
 
-import { SanitizationAudit } from '../redaction/types';
-import { SafeAiMetadata, StructuredPrivacyInsight } from './types';
+import type { SanitizationAudit } from '../redaction/types';
+import type {
+  ChromePromptResponseConstraint,
+  SafeAiMetadata,
+  StructuredPrivacyInsight,
+} from './types';
 
 export const AI_SYSTEM_INSTRUCTION =
   "You are SOFIE's local privacy insight assistant. You analyze only safe aggregate sanitization metadata. " +
@@ -40,7 +44,7 @@ export const INSIGHT_JSON_SCHEMA = {
     },
   },
   required: ['summary', 'recommendation', 'caution'],
-};
+} satisfies ChromePromptResponseConstraint;
 
 /**
  * Extracts strictly safe aggregate metadata from the sanitization audit.
@@ -52,7 +56,6 @@ export function buildSafeAiMetadata(audit: SanitizationAudit): SafeAiMetadata {
     counts: { ...audit.counts },
     redactionMode: audit.mode,
     originalCharacterCount: audit.originalLength,
-    detectedEntityCount: audit.totalEntities,
   };
 }
 
@@ -98,7 +101,7 @@ export function parseStructuredInsight(rawText: string): StructuredPrivacyInsigh
     throw new Error('Model response could not be parsed as valid JSON.');
   }
 
-  if (typeof parsed !== 'object' || parsed === null) {
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
     throw new Error('Model output format invalid: expected JSON object.');
   }
 

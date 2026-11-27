@@ -867,6 +867,16 @@
   gap: 10px;
 }
 
+.copy-error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 2px solid var(--orange);
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
 .sanitization-pending {
   border: var(--border);
   background: var(--grey-100);

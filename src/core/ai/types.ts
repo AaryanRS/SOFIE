@@ -4,8 +4,8 @@
  * Types for Google Built-in AI / LanguageModel integration.
  */
 
-import { EntityType } from '../pii/types';
-import { RedactionMode } from '../redaction/types';
+import type { EntityType } from '../pii/types';
+import type { RedactionMode } from '../redaction/types';
 
 export type AiAvailabilityState =
   | 'unsupported'
@@ -20,7 +20,6 @@ export interface SafeAiMetadata {
   counts: Record<EntityType, number>;
   redactionMode: RedactionMode;
   originalCharacterCount: number;
-  detectedEntityCount: number;
 }
 
 export interface StructuredPrivacyInsight {
@@ -57,7 +56,13 @@ export interface ChromeLanguageModelCreateOptions {
 }
 
 export interface ChromeLanguageModelPromptOptions {
-  responseConstraint?: object;
+  responseConstraint?: ChromePromptResponseConstraint;
+}
+
+export interface ChromePromptResponseConstraint {
+  type: 'object';
+  properties: Record<string, { type: 'string'; description?: string }>;
+  required: string[];
 }
 
 export interface ChromeLanguageModelSession {
@@ -69,4 +74,12 @@ export interface ChromeLanguageModelFactory {
   availability: () => Promise<string>;
   capabilities?: () => Promise<ChromeLanguageModelCapabilities>;
   create: (options?: ChromeLanguageModelCreateOptions) => Promise<ChromeLanguageModelSession>;
+}
+
+/** Browser globals exposed by Chrome's on-device Prompt API. */
+declare global {
+  interface Window {
+    LanguageModel?: ChromeLanguageModelFactory;
+    ai?: { languageModel?: ChromeLanguageModelFactory };
+  }
 }

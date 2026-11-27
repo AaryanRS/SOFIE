@@ -31,17 +31,12 @@ import {
 export function getLanguageModelFactory(): ChromeLanguageModelFactory | null {
   if (typeof window === 'undefined') return null;
 
-  const win = window as unknown as {
-    LanguageModel?: ChromeLanguageModelFactory;
-    ai?: { languageModel?: ChromeLanguageModelFactory };
-  };
-
-  if (win.LanguageModel && typeof win.LanguageModel.create === 'function') {
-    return win.LanguageModel;
+  if (window.LanguageModel && typeof window.LanguageModel.create === 'function') {
+    return window.LanguageModel;
   }
 
-  if (win.ai?.languageModel && typeof win.ai.languageModel.create === 'function') {
-    return win.ai.languageModel;
+  if (window.ai?.languageModel && typeof window.ai.languageModel.create === 'function') {
+    return window.ai.languageModel;
   }
 
   return null;

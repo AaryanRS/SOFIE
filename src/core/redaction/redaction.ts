@@ -6,6 +6,7 @@
  */
 
 import { EntityType, PiiEntity } from '../pii/types';
+import { createEmptyEntityCounts } from '../pii/entityCounts';
 import { Pseudonymizer } from './pseudonymization';
 import {
   RedactionMode,
@@ -18,6 +19,23 @@ import {
 // ---------------------------------------------------------------------------
 // Partial Masking Helpers
 // ---------------------------------------------------------------------------
+
+function maskDigitsKeepingLastFour(value: string, mask: string): string {
+  const digitIndices: number[] = [];
+  for (let i = 0; i < value.length; i++) {
+    if (/\d/.test(value[i])) digitIndices.push(i);
+  }
+
+  if (digitIndices.length <= 4) {
+    return value.replace(/\d/g, mask);
+  }
+
+  const firstVisibleDigit = digitIndices[digitIndices.length - 4];
+  return value
+    .split('')
+    .map((char, index) => (/\d/.test(char) && index < firstVisibleDigit ? mask : char))
+    .join('');
+}
 
 /**
  * Partially masks an email address:
@@ -58,32 +76,7 @@ export function maskPhone(phone: string): string {
     rest = phone.slice(1);
   }
 
-  // Count digit positions in rest
-  const digitIndices: number[] = [];
-  for (let i = 0; i < rest.length; i++) {
-    if (/\d/.test(rest[i])) {
-      digitIndices.push(i);
-    }
-  }
-
-  // If 4 or fewer digits in rest, just mask all but last 2
-  if (digitIndices.length <= 4) {
-    return prefix + rest.replace(/\d/g, '*');
-  }
-
-  // Keep last 4 digits visible, mask preceding digits in rest
-  const last4Threshold = digitIndices[digitIndices.length - 4];
-  const maskedRest = rest
-    .split('')
-    .map((char, idx) => {
-      if (/\d/.test(char)) {
-        return idx < last4Threshold ? '*' : char;
-      }
-      return char;
-    })
-    .join('');
-
-  return prefix + maskedRest;
+  return prefix + maskDigitsKeepingLastFour(rest, '*');
 }
 
 /**
@@ -93,27 +86,7 @@ export function maskPhone(phone: string): string {
  *   4111111111111234    -> XXXXXXXXXXXX1234
  */
 export function maskCreditCard(cc: string): string {
-  const digitIndices: number[] = [];
-  for (let i = 0; i < cc.length; i++) {
-    if (/\d/.test(cc[i])) {
-      digitIndices.push(i);
-    }
-  }
-
-  if (digitIndices.length <= 4) {
-    return cc.replace(/\d/g, 'X');
-  }
-
-  const last4Threshold = digitIndices[digitIndices.length - 4];
-  return cc
-    .split('')
-    .map((char, idx) => {
-      if (/\d/.test(char)) {
-        return idx < last4Threshold ? 'X' : char;
-      }
-      return char;
-    })
-    .join('');
+  return maskDigitsKeepingLastFour(cc, 'X');
 }
 
 /**
@@ -134,27 +107,7 @@ export function maskPAN(pan: string): string {
  *   123456789012   -> XXXXXXXX9012
  */
 export function maskAadhaar(aadhaar: string): string {
-  const digitIndices: number[] = [];
-  for (let i = 0; i < aadhaar.length; i++) {
-    if (/\d/.test(aadhaar[i])) {
-      digitIndices.push(i);
-    }
-  }
-
-  if (digitIndices.length <= 4) {
-    return aadhaar.replace(/\d/g, 'X');
-  }
-
-  const last4Threshold = digitIndices[digitIndices.length - 4];
-  return aadhaar
-    .split('')
-    .map((char, idx) => {
-      if (/\d/.test(char)) {
-        return idx < last4Threshold ? 'X' : char;
-      }
-      return char;
-    })
-    .join('');
+  return maskDigitsKeepingLastFour(aadhaar, 'X');
 }
 
 /**
@@ -231,14 +184,7 @@ export function sanitizeText({
   const pseudonymizer = new Pseudonymizer(pseudonymMap);
 
   // Initialize counts for audit
-  const counts: Record<EntityType, number> = {
-    [EntityType.EMAIL]: 0,
-    [EntityType.PHONE]: 0,
-    [EntityType.IP]: 0,
-    [EntityType.PAN]: 0,
-    [EntityType.AADHAAR]: 0,
-    [EntityType.CREDIT_CARD]: 0,
-  };
+  const counts = createEmptyEntityCounts();
 
   if (!text || entities.length === 0) {
     const audit: SanitizationAudit = {
@@ -296,7 +242,7 @@ export function sanitizeText({
       sanitizedEnd,
     });
 
-    counts[entity.type] = (counts[entity.type] || 0) + 1;
+    counts[entity.type] += 1;
     cursor = entity.end;
   }
 

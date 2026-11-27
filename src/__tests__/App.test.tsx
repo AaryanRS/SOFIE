@@ -276,6 +276,22 @@ describe('SOFIE Phase 2 UI', () => {
     await act(async () => { fireEvent.click(downloadBtn); });
   });
 
+  it('shows an accessible error when clipboard access is unavailable', async () => {
+    render(<App />);
+    await act(async () => {
+      fireEvent.change(getTextarea(), { target: { value: 'Contact user@example.com' } });
+      vi.advanceTimersByTime(300);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('copy-btn'));
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /clipboard access is unavailable/i
+    );
+  });
+
   it('20. Reset/clear removes Diff viewer, Audit summary, and resets state', async () => {
     render(<App />);
     await act(async () => {

@@ -16,18 +16,24 @@ interface Props {
   replacements: SanitizedReplacement[];
 }
 
-interface DiffSegment {
-  isReplacement: boolean;
-  origText: string;
-  sanText: string;
-  replacement?: SanitizedReplacement;
-}
+type DiffSegment =
+  | {
+      kind: 'unchanged';
+      origText: string;
+      sanText: string;
+    }
+  | {
+      kind: 'replacement';
+      origText: string;
+      sanText: string;
+      replacement: SanitizedReplacement;
+    };
 
 export function DiffViewer({ originalText, sanitizedText, replacements }: Props) {
   // Construct aligned segments between original and sanitized
   const segments = useMemo<DiffSegment[]>(() => {
     if (replacements.length === 0) {
-      return [{ isReplacement: false, origText: originalText, sanText: sanitizedText }];
+      return [{ kind: 'unchanged', origText: originalText, sanText: sanitizedText }];
     }
 
     const segs: DiffSegment[] = [];
@@ -38,7 +44,7 @@ export function DiffViewer({ originalText, sanitizedText, replacements }: Props)
       if (r.originalStart > origCursor) {
         const unchanged = originalText.slice(origCursor, r.originalStart);
         segs.push({
-          isReplacement: false,
+          kind: 'unchanged',
           origText: unchanged,
           sanText: unchanged,
         });
@@ -46,7 +52,7 @@ export function DiffViewer({ originalText, sanitizedText, replacements }: Props)
 
       // Replaced entity
       segs.push({
-        isReplacement: true,
+        kind: 'replacement',
         origText: r.entity.value,
         sanText: r.replacementValue,
         replacement: r,
@@ -59,7 +65,7 @@ export function DiffViewer({ originalText, sanitizedText, replacements }: Props)
     if (origCursor < originalText.length) {
       const rest = originalText.slice(origCursor);
       segs.push({
-        isReplacement: false,
+        kind: 'unchanged',
         origText: rest,
         sanText: rest,
       });
@@ -88,10 +94,10 @@ export function DiffViewer({ originalText, sanitizedText, replacements }: Props)
           >
             <pre className="diff-pane__code">
               {segments.map((seg, i) => {
-                if (!seg.isReplacement) {
+                if (seg.kind === 'unchanged') {
                   return <span key={i}>{seg.origText}</span>;
                 }
-                const meta = ENTITY_META[seg.replacement!.entity.type];
+                const meta = ENTITY_META[seg.replacement.entity.type];
                 return (
                   <mark
                     key={i}
@@ -129,10 +135,10 @@ export function DiffViewer({ originalText, sanitizedText, replacements }: Props)
           >
             <pre className="diff-pane__code">
               {segments.map((seg, i) => {
-                if (!seg.isReplacement) {
+                if (seg.kind === 'unchanged') {
                   return <span key={i}>{seg.sanText}</span>;
                 }
-                const meta = ENTITY_META[seg.replacement!.entity.type];
+                const meta = ENTITY_META[seg.replacement.entity.type];
                 return (
                   <mark
                     key={i}

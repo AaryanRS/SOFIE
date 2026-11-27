@@ -52,11 +52,17 @@ describe('Phase 4: Google Built-in AI Service Layer', () => {
     expect(meta.counts[EntityType.EMAIL]).toBe(2);
     expect(meta.counts[EntityType.CREDIT_CARD]).toBe(1);
     expect(meta.originalCharacterCount).toBe(450);
+    expect(Object.keys(meta).sort()).toEqual([
+      'counts',
+      'originalCharacterCount',
+      'redactionMode',
+      'totalEntities',
+    ]);
 
     // Verify there are no raw text fields or entity arrays
-    expect((meta as any).text).toBeUndefined();
-    expect((meta as any).rawText).toBeUndefined();
-    expect((meta as any).entities).toBeUndefined();
+    expect(Reflect.has(meta, 'text')).toBe(false);
+    expect(Reflect.has(meta, 'rawText')).toBe(false);
+    expect(Reflect.has(meta, 'entities')).toBe(false);
   });
 
   // -------------------------------------------------------------------------
@@ -140,26 +146,33 @@ describe('Phase 4: Google Built-in AI Service Layer', () => {
         /not be parsed as valid JSON/i
       );
     });
+
+    it('rejects a JSON array instead of accepting it as an object', () => {
+      expect(() => parseStructuredInsight('[]')).toThrow(/expected JSON object/i);
+    });
   });
 
   // -------------------------------------------------------------------------
   // 5. Mocked LanguageModel In-Browser Lifecycle
   // -------------------------------------------------------------------------
   describe('Mocked Browser LanguageModel lifecycle', () => {
-    let originalLanguageModel: unknown;
+    let originalLanguageModel: ChromeLanguageModelFactory | undefined;
+    let originalAi: Window['ai'];
 
     beforeEach(() => {
-      originalLanguageModel = (window as any).LanguageModel;
+      originalLanguageModel = window.LanguageModel;
+      originalAi = window.ai;
     });
 
     afterEach(() => {
-      (window as any).LanguageModel = originalLanguageModel;
+      window.LanguageModel = originalLanguageModel;
+      window.ai = originalAi;
       vi.restoreAllMocks();
     });
 
     it('returns unsupported when window.LanguageModel is absent', async () => {
-      delete (window as any).LanguageModel;
-      delete (window as any).ai;
+      delete window.LanguageModel;
+      delete window.ai;
       const status = await checkAiAvailability();
       expect(status).toBe('unsupported');
     });
@@ -182,7 +195,7 @@ describe('Phase 4: Google Built-in AI Service Layer', () => {
         }),
       };
 
-      (window as any).LanguageModel = mockFactory;
+      window.LanguageModel = mockFactory;
 
       const availability = await checkAiAvailability();
       expect(availability).toBe('available');
@@ -222,7 +235,7 @@ describe('Phase 4: Google Built-in AI Service Layer', () => {
         }),
       };
 
-      (window as any).LanguageModel = mockFactory;
+      window.LanguageModel = mockFactory;
 
       const meta = buildSafeAiMetadata(sampleAudit);
       await expect(generatePrivacyInsight(meta)).rejects.toThrow(/Internal inference failure/i);
@@ -262,10 +275,10 @@ describe('Phase 4: Google Built-in AI Service Layer', () => {
         availability: vi.fn().mockResolvedValue('readily'),
         create: vi.fn().mockResolvedValue({ prompt: mockPrompt, destroy: vi.fn() }),
       };
-      (window as any).LanguageModel = mockFactory;
+      window.LanguageModel = mockFactory;
 
       await generatePrivacyInsight(meta);
-      const prompt = mockPrompt.mock.calls[0][0] as string;
+      const prompt = mockPrompt.mock.calls[0][0];
 
       // Verify none of the raw text or entities are in the prompt
       expect(prompt).not.toContain('Private test');

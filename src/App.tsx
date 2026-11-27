@@ -33,12 +33,14 @@ export default function App() {
   const [fileError, setFileError] = useState<string | null>(null);
   const [mode, setMode] = useState<RedactionMode>(RedactionMode.FULL_MASK);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState<string | null>(null);
 
   const { entities, isDetecting } = useDetection(text, documentVersion);
 
   const updateDocument = useCallback((nextText: string) => {
     setText(nextText);
     setDocumentVersion((version) => version + 1);
+    setCopyError(null);
   }, []);
 
   // Compute sanitized text & audit on mode or detection change
@@ -87,12 +89,13 @@ export default function App() {
 
   const handleCopy = useCallback(async () => {
     if (isDetecting || !entities.length || !sanitizationResult.sanitizedText) return;
+    setCopyError(null);
     try {
       await navigator.clipboard.writeText(sanitizationResult.sanitizedText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback if clipboard API not permitted
+      setCopyError('Clipboard access is unavailable. Select and copy the sanitized output below.');
     }
   }, [isDetecting, entities.length, sanitizationResult.sanitizedText]);
 
@@ -162,6 +165,12 @@ export default function App() {
                 </button>
               </div>
             </div>
+
+            {copyError && (
+              <p className="copy-error" role="alert" data-testid="copy-error">
+                {copyError}
+              </p>
+            )}
 
             {isDetecting ? (
               <div className="sanitization-pending" role="status" aria-live="polite">
